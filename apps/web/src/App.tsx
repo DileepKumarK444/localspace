@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import ActivityPage from './components/ActivityPage';
 import Dialogs from './components/Dialogs';
+import IconColorPicker from './components/IconColorPicker';
 import ErrorBoundary from './components/ErrorBoundary';
 import FolderView from './components/FolderView';
 import { ConfirmDialog, ContextMenu, Toaster } from './components/Overlays';
@@ -83,6 +84,7 @@ export default function App() {
       <ContextMenu />
       <ConfirmDialog />
       <Dialogs />
+      <IconColorPicker />
       <PromptDialog />
       <ShortcutsDialog />
       <VersionHistory />

@@ -30,6 +30,7 @@ interface TreeState {
   rename: (kind: 'folder' | 'page', id: string, title: string) => Promise<void>;
   remove: (kind: 'folder' | 'page', id: string) => Promise<boolean>;
   toggleFavorite: (id: string) => Promise<void>;
+  setColor: (kind: 'folder' | 'page', id: string, color: string | null) => Promise<void>;
   touchRecent: (id: string) => void;
   setPageTitleLocal: (id: string, title: string) => void;
 }
@@ -70,7 +71,7 @@ export const useTree = create<TreeState>((set, get) => ({
   createPage: async (loc, opts) => {
     try {
       const p = await api.createPage(opts?.title ?? 'Untitled page', loc, opts?.templateId);
-      const node: PageNode = { id: p.id, title: p.title, folderId: p.folderId, parentPageId: p.parentPageId, position: p.position, updatedAt: p.updatedAt };
+      const node: PageNode = { id: p.id, title: p.title, folderId: p.folderId, parentPageId: p.parentPageId, position: p.position, updatedAt: p.updatedAt, color: p.color };
       set({ pages: [...get().pages, node] });
       const parent = loc.folderId ?? loc.parentPageId;
       if (parent) get().expand([parent]);
@@ -123,6 +124,13 @@ export const useTree = create<TreeState>((set, get) => ({
     const before = get().favorites;
     set({ favorites: on ? [...before, id] : before.filter((f) => f !== id) });
     try { await api.setFavorite(id, on); } catch (e) { set({ favorites: before }); useUi.getState().toast(errMsg(e), 'error'); }
+  },
+
+  setColor: async (kind, id, color) => {
+    const before = { folders: get().folders, pages: get().pages };
+    // optimistic: the icon changes immediately, and is put back if the server refuses
+    set(kind === 'folder' ? { folders: before.folders.map((f) => (f.id === id ? { ...f, color } : f)) } : { pages: before.pages.map((p) => (p.id === id ? { ...p, color } : p)) });
+    try { await (kind === 'folder' ? api.setFolderColor(id, color) : api.setPageColor(id, color)); } catch (e) { set(before); useUi.getState().toast(errMsg(e), 'error'); }
   },
 
   touchRecent: (id) => {

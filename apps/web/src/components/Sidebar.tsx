@@ -105,7 +105,7 @@ function TreeNodeView({ item, depth, forceOpen, index }: { item: TreeItem; depth
         <button className={`chev ${hasKids ? (open ? 'open' : '') : 'none'}`} tabIndex={-1} aria-label={open ? 'Collapse' : 'Expand'} onClick={(e) => { e.stopPropagation(); toggle(item.id); }}>
           <ChevronRight className="ic" size={14} />
         </button>
-        <span className="nico"><Icon className="ic" /></span>
+        <span className="nico" style={item.color ? { color: item.color } : undefined}><Icon className="ic" /></span>
         {renamingId === item.id ? <RenameInput kind={item.kind} id={item.id} initial={item.title} /> : <span className="label">{item.title}</span>}
         <button className="more" aria-label="More actions" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); openMenu({ x: r.right, y: r.bottom + 2, kind: item.kind, id: item.id }); }}>
           <MoreHorizontal className="ic" />
@@ -126,7 +126,7 @@ function MiniList({ ids, empty }: { ids: string[]; empty: string }) {
     <>
       {items.map((p) => (
         <div key={p.id} className={`node ${selection?.id === p.id ? 'sel' : ''}`} style={{ paddingLeft: 8 }} tabIndex={0} onClick={() => navigate(hrefFor('page', p.id))} onKeyDown={(e) => e.key === 'Enter' && navigate(hrefFor('page', p.id))}>
-          <span className="nico"><FileText className="ic" /></span><span className="label">{p.title}</span>
+          <span className="nico" style={p.color ? { color: p.color } : undefined}><FileText className="ic" /></span><span className="label">{p.title}</span>
         </div>
       ))}
     </>

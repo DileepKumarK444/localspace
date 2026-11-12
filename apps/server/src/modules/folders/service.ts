@@ -4,8 +4,8 @@ import { badRequest, notFound } from '../../errors';
 import { logActivity } from '../activity/service';
 import { folderSubtree, loadMeta, pageSubtree } from '../tree/hierarchy';
 
-const toNode = (f: { id: string; name: string; parentId: string | null; position: number }): FolderNode => ({
-  id: f.id, name: f.name, parentId: f.parentId, position: f.position,
+const toNode = (f: { id: string; name: string; parentId: string | null; position: number; color: string | null }): FolderNode => ({
+  id: f.id, name: f.name, parentId: f.parentId, position: f.position, color: f.color,
 });
 
 async function nextPosition(workspaceId: string, parentId: string | null) {
@@ -26,12 +26,13 @@ export async function createFolder(input: { name: string; parentId?: string | nu
   return toNode(f);
 }
 
-export async function updateFolder(id: string, input: { name?: string; parentId?: string | null }): Promise<FolderNode> {
+export async function updateFolder(id: string, input: { name?: string; parentId?: string | null; color?: string | null }): Promise<FolderNode> {
   const workspaceId = await getWorkspaceId();
   const existing = await prisma.folder.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw notFound('Folder');
-  const data: { name?: string; parentId?: string | null; position?: number } = {};
+  const data: { name?: string; parentId?: string | null; position?: number; color?: string | null } = {};
   if (input.name !== undefined) data.name = input.name;
+  if (input.color !== undefined) data.color = input.color ? input.color.toLowerCase() : null;
   if (input.parentId !== undefined && input.parentId !== existing.parentId) {
     if (input.parentId) {
       const { folders } = await loadMeta(workspaceId);

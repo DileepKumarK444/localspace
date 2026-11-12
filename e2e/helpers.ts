@@ -23,3 +23,17 @@ export async function ensureOpen(page: Page, label: string) {
   const item = page.locator('[role=treeitem]').filter({ has: page.locator('> .node .label', { hasText: new RegExp(`^${label}$`) }) }).first();
   if ((await item.getAttribute('aria-expanded')) === 'false') await node(page, label).locator('.chev').click();
 }
+
+/**
+ * Moves the caret to the very end of the document (Cmd+Down on macOS, Ctrl+End elsewhere), after making sure the editor
+ * really has focus, and then verifies the caret landed in the last block. Typing before that is a race that puts text in the wrong place.
+ */
+export async function goToEnd(page: Page) {
+  await expect(editor(page)).toBeFocused();
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+ArrowDown' : 'Control+End');
+  await expect.poll(() => page.evaluate(() => {
+    const ed = document.querySelector('.ProseMirror[aria-label="Page content"]');
+    const sel = getSelection();
+    return !!(ed && sel?.anchorNode && ed.lastElementChild?.contains(sel.anchorNode));
+  })).toBe(true);
+}

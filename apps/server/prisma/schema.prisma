@@ -24,6 +24,7 @@ model Folder {
   workspaceId String
   parentId    String?
   name        String
+  color       String?
   position    Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -42,6 +43,7 @@ model Page {
   folderId     String?
   parentPageId String?
   title        String
+  color        String?
   contentJson  String        @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
   contentText  String        @default("")
   version      Int           @default(1)

@@ -5,6 +5,7 @@ export interface TreeItem {
   kind: NodeKind;
   id: string;
   title: string;
+  color: string | null;
   children: TreeItem[];
 }
 
@@ -21,11 +22,11 @@ export function buildTree(folders: FolderNode[], pages: PageNode[]): TreeItem[] 
     else pagesByFolder.set(p.folderId, [...(pagesByFolder.get(p.folderId) ?? []), p]);
   }
   const pageItem = (p: PageNode): TreeItem => ({
-    kind: 'page', id: p.id, title: p.title,
+    kind: 'page', id: p.id, title: p.title, color: p.color,
     children: (pagesByParent.get(p.id) ?? []).sort(byPos).map(pageItem),
   });
   const folderItem = (f: FolderNode): TreeItem => ({
-    kind: 'folder', id: f.id, title: f.name,
+    kind: 'folder', id: f.id, title: f.name, color: f.color,
     children: [
       ...(foldersByParent.get(f.id) ?? []).sort(byPos).map(folderItem),
       ...(pagesByFolder.get(f.id) ?? []).sort(byPos).map(pageItem),

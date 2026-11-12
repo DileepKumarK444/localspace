@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { goToEnd } from './helpers';
 import { TestServer } from './server';
 
 const server = new TestServer();
@@ -102,7 +103,7 @@ test.describe.serial('workspace: creating, nesting, navigating, editing, autosav
   test('rich formatting: bold, heading, list, link, table and divider all persist', async ({ page }) => {
     await openPage(page, 'Deep Page');
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.press('Enter');
     await page.keyboard.press('Meta+b');
     await page.keyboard.type('boldword');
@@ -116,7 +117,9 @@ test.describe.serial('workspace: creating, nesting, navigating, editing, autosav
     await page.keyboard.press('Enter');
     await page.keyboard.type('item 2');
     await page.keyboard.press('Enter');
+    await expect(editor(page).locator('ul li')).toHaveCount(3); // a new empty item
     await page.keyboard.press('Enter');
+    await expect(editor(page).locator('ul li')).toHaveCount(2); // Enter on the empty item leaves the list
     await page.getByRole('button', { name: 'Insert' }).click();
     await page.getByRole('button', { name: 'Table' }).click();
     await page.keyboard.type('H1');
@@ -140,7 +143,7 @@ test.describe.serial('workspace: creating, nesting, navigating, editing, autosav
     await page.getByRole('button', { name: 'Add column right' }).click();
     expect(await cols()).toBe(before + 1);
     await page.getByRole('button', { name: 'Cell colour' }).click();
-    await page.getByRole('button', { name: 'Green' }).click();
+    await page.getByRole('button', { name: 'Mint', exact: true }).click();
     await expect(editor(page).locator('td[data-bg]')).toHaveCount(1);
     const rows = await editor(page).locator('table tr').count();
     await page.getByRole('button', { name: 'Delete row' }).click();

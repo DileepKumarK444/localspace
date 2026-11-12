@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { editor, node, openPage, status } from './helpers';
+import { editor, node, openPage, status, goToEnd } from './helpers';
 import { assertIntegrity } from './helpers2';
 import { TestServer, doc } from './server';
 
@@ -62,7 +62,7 @@ test.describe.serial('edge cases and hostile input', () => {
     expect(await search('🚀')).toContain('Ünïcode 🚀 日本'); // emoji in a title (substring match)
     // typing emoji/unicode through the real keyboard saves intact
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.insertText(' ✅ ñandú');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     expect((await server.api('GET', `/pages/${p.id}`)).contentJson).toContain('✅ ñandú');
@@ -102,7 +102,7 @@ test.describe.serial('edge cases and hostile input', () => {
     await expect(editor(page)).toContainText('needle-in-haystack');
     expect(Date.now() - l0).toBeLessThan(8000);
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' typed at the end');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     assertIntegrity(server);

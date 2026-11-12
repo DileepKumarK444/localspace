@@ -14,7 +14,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import { Clock, Copy, FileCode2, FileDown, FileText, FolderInput, History, LayoutTemplate, MoreHorizontal, Star, Trash2 } from 'lucide-react';
+import { Clock, Copy, FileCode2, FileDown, FileText, FolderInput, History, LayoutTemplate, MoreHorizontal, Palette, Star, Trash2 } from 'lucide-react';
 import type { AttachmentInfo, PageDetail } from '@localspace/shared';
 import { ApiError, api, exportUrl } from '../api/client';
 import { Callout, ColorCell, ColorHeader, Expand, ExpandBody, ExpandTitle, FontSize, ResizableImage, lowlight } from '../lib/extensions';
@@ -90,6 +90,7 @@ function PageMenu({ pageId }: { pageId: string }) {
           <button role="menuitem" onClick={run(() => useUi.getState().setHistoryFor(pageId))}><History className="ic" />Version history<kbd>{ALT}H</kbd></button>
           <button role="menuitem" onClick={run(() => void duplicate(pageId))}><Copy className="ic" />Duplicate</button>
           <button role="menuitem" onClick={run(() => openMove('page', pageId))}><FolderInput className="ic" />Move to…</button>
+          <button role="menuitem" onClick={() => { const r = ref.current?.getBoundingClientRect(); setOpen(false); useUi.getState().setColorPicker({ x: (r?.right ?? 300) - 262, y: (r?.bottom ?? 80) + 4, kind: 'page', id: pageId }); }}><Palette className="ic" />Icon colour…</button>
           <button role="menuitem" onClick={run(saveAsTemplate)}><LayoutTemplate className="ic" />Save as template…</button>
           <hr />
           <div className="pop-label" style={{ padding: '4px 10px' }}>Export</div>

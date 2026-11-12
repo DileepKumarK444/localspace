@@ -6,6 +6,8 @@ export interface FolderNode {
   name: string;
   parentId: string | null;
   position: number;
+  /** Icon colour as #rrggbb, or null for the default. */
+  color: string | null;
 }
 export interface PageNode {
   id: string;
@@ -14,6 +16,7 @@ export interface PageNode {
   parentPageId: string | null;
   position: number;
   updatedAt: string;
+  color: string | null;
 }
 export interface TreeResponse {
   folders: FolderNode[];
@@ -85,7 +88,9 @@ const name = z.string().trim().min(1, 'Name is required').max(200);
 const id = z.string().min(1);
 
 export const createFolderSchema = z.object({ name, parentId: id.nullable().optional() });
-export const updateFolderSchema = z.object({ name: name.optional(), parentId: id.nullable().optional() });
+/** Icon colour: #rrggbb, or null to reset to the default. */
+const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Colour must look like #1a2b3c').nullable();
+export const updateFolderSchema = z.object({ name: name.optional(), parentId: id.nullable().optional(), color: color.optional() });
 export const createPageSchema = z.object({
   title: name,
   templateId: z.string().optional(),
@@ -94,6 +99,7 @@ export const createPageSchema = z.object({
 });
 export const updatePageMetaSchema = z.object({
   title: name.optional(),
+  color: color.optional(),
   folderId: id.nullable().optional(),
   parentPageId: id.nullable().optional(),
 });

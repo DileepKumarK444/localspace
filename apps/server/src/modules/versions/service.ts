@@ -67,7 +67,7 @@ export async function restoreVersion(pageId: string, versionId: string): Promise
   });
   await logActivity('version_restored', 'page', pageId, page.title);
   return {
-    id: page.id, title: page.title, folderId: page.folderId, parentPageId: page.parentPageId, position: page.position,
+    id: page.id, title: page.title, folderId: page.folderId, parentPageId: page.parentPageId, position: page.position, color: page.color,
     updatedAt: page.updatedAt.toISOString(), createdAt: page.createdAt.toISOString(), contentJson: page.contentJson, version: page.version,
   };
 }

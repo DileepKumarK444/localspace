@@ -609,3 +609,38 @@ describe('M6: improved search', () => {
     expect((await call('GET', '/tree')).status).toBe(200);
   });
 });
+
+describe('icon colours', () => {
+  it('sets, normalises, validates, resets and duplicates colours for folders and pages', async () => {
+    const f = (await call('POST', '/folders', { name: 'Colourful' })).body;
+    const p = (await call('POST', '/pages', { title: 'Coloured page', folderId: f.id })).body;
+    expect(f.color).toBeNull();
+    expect(p.color).toBeNull();
+
+    expect((await call('PATCH', `/folders/${f.id}`, { color: '#E5484D' })).body.color).toBe('#e5484d'); // normalised to lower case
+    expect((await call('PATCH', `/pages/${p.id}`, { color: '#0c66e4' })).body.color).toBe('#0c66e4');
+    const tree = (await call('GET', '/tree')).body;
+    expect(tree.folders.find((x: { id: string }) => x.id === f.id).color).toBe('#e5484d');
+    expect(tree.pages.find((x: { id: string }) => x.id === p.id).color).toBe('#0c66e4');
+
+    // changing the name must not clear the colour; invalid values are rejected and change nothing
+    await call('PATCH', `/folders/${f.id}`, { name: 'Colourful 2' });
+    expect((await call('GET', '/tree')).body.folders.find((x: { id: string }) => x.id === f.id).color).toBe('#e5484d');
+    for (const bad of ['red', '#12345', '#GGGGGG', 'javascript:alert(1)', '#1234567', 5]) {
+      expect((await call('PATCH', `/pages/${p.id}`, { color: bad })).status, String(bad)).toBe(400);
+    }
+    expect((await call('GET', `/pages/${p.id}`)).body.color).toBe('#0c66e4');
+
+    // a duplicate keeps the colour; null resets to default
+    const dup = (await call('POST', `/pages/${p.id}/duplicate`)).body;
+    expect(dup.color).toBe('#0c66e4');
+    expect((await call('PATCH', `/pages/${p.id}`, { color: null })).body.color).toBeNull();
+    expect((await call('PATCH', `/folders/${f.id}`, { color: null })).body.color).toBeNull();
+
+    // colour survives soft delete + restore
+    await call('PATCH', `/pages/${dup.id}`, { color: '#30a46c' });
+    await call('DELETE', `/pages/${dup.id}`);
+    await call('POST', '/trash/restore', { kind: 'page', id: dup.id });
+    expect((await call('GET', `/pages/${dup.id}`)).body.color).toBe('#30a46c');
+  });
+});

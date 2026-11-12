@@ -11,7 +11,7 @@ const EMPTY_DOC = JSON.stringify({ type: 'doc', content: [{ type: 'paragraph' }]
 
 type PageRow = Awaited<ReturnType<typeof prisma.page.findFirstOrThrow>>;
 const toDetail = (p: PageRow): PageDetail => ({
-  id: p.id, title: p.title, folderId: p.folderId, parentPageId: p.parentPageId, position: p.position,
+  id: p.id, title: p.title, folderId: p.folderId, parentPageId: p.parentPageId, position: p.position, color: p.color,
   updatedAt: p.updatedAt.toISOString(), createdAt: p.createdAt.toISOString(), contentJson: p.contentJson, version: p.version,
 });
 
@@ -90,12 +90,13 @@ export async function savePage(id: string, input: { version: number; title?: str
 }
 
 /** Rename and/or move (metadata only; does not touch content). */
-export async function updatePageMeta(id: string, input: { title?: string; folderId?: string | null; parentPageId?: string | null }) {
+export async function updatePageMeta(id: string, input: { title?: string; color?: string | null; folderId?: string | null; parentPageId?: string | null }) {
   const workspaceId = await getWorkspaceId();
   const existing = await prisma.page.findFirst({ where: { id, deletedAt: null } });
   if (!existing) throw notFound('Page');
-  const data: { title?: string; folderId?: string | null; parentPageId?: string | null; position?: number } = {};
+  const data: { title?: string; color?: string | null; folderId?: string | null; parentPageId?: string | null; position?: number } = {};
   if (input.title !== undefined) data.title = input.title;
+  if (input.color !== undefined) data.color = input.color ? input.color.toLowerCase() : null;
   if (input.folderId !== undefined || input.parentPageId !== undefined) {
     const folderId = input.folderId ?? null;
     const parentPageId = input.parentPageId ?? null;
@@ -147,7 +148,7 @@ export async function duplicatePage(id: string): Promise<PageDetail> {
   const copy = await prisma.$transaction(async (tx) => {
     let contentJson = src.contentJson;
     const created = await tx.page.create({
-      data: { workspaceId, folderId: src.folderId, parentPageId: src.parentPageId, title: `${src.title} (copy)`.slice(0, 200), contentJson, contentText: src.contentText, position },
+      data: { workspaceId, folderId: src.folderId, parentPageId: src.parentPageId, color: src.color, title: `${src.title} (copy)`.slice(0, 200), contentJson, contentText: src.contentText, position },
     });
     // Attachments get new rows that share the same stored file; content links are re-pointed to the copies.
     for (const a of src.attachments) {

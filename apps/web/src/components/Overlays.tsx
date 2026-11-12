@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Copy, FilePlus2, FolderInput, FolderPlus, LayoutTemplate, Pencil, Star, Trash2 } from 'lucide-react';
+import { Copy, FilePlus2, FolderInput, FolderPlus, LayoutTemplate, Palette, Pencil, Star, Trash2 } from 'lucide-react';
 import { useActions } from '../lib/actions';
 import { useTree } from '../store/tree';
 import { useUi } from '../store/ui';
@@ -39,6 +39,7 @@ export function ContextMenu() {
       <button role="menuitem" onClick={run(() => useUi.getState().setRenaming(id))}><Pencil className="ic" />Rename<kbd>F2</kbd></button>
       {kind === 'page' && <button role="menuitem" onClick={run(() => void duplicate(id))}><Copy className="ic" />Duplicate</button>}
       <button role="menuitem" onClick={run(() => openMove(kind, id))}><FolderInput className="ic" />Move to…</button>
+      <button role="menuitem" onClick={run(() => useUi.getState().setColorPicker({ x: menu.x, y: menu.y, kind, id }))}><Palette className="ic" />Icon colour…</button>
       {kind === 'page' && (
         <button role="menuitem" onClick={run(() => void useTree.getState().toggleFavorite(id))}><Star className="ic" />{isFav ? 'Remove from favorites' : 'Add to favorites'}</button>
       )}

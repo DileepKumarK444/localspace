@@ -374,3 +374,12 @@ code { font: 12px var(--mono); background: var(--surface-2); padding: 1px 5px; b
 }
 @media (max-width: 900px) { .ProseMirror table { width: max-content; min-width: 100%; table-layout: auto; } .ProseMirror th, .ProseMirror td { min-width: 110px; } }
 @media (max-width: 520px) { .tpl-grid { grid-template-columns: 1fr; } .ProseMirror { font-size: 16px; } }
+
+/* colour chooser */
+.color-panel { width: 262px; }
+.color-panel .swatches { grid-template-columns: repeat(var(--cols, 8), 26px); }
+.swatch.cur { outline: 2px solid var(--accent); outline-offset: 1px; }
+.custom-row { display: flex; gap: 6px; align-items: center; padding: 4px; }
+.custom-row input[type=color] { width: 34px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; }
+.custom-row .hex { flex: 1; min-width: 0; height: 28px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font: 12px var(--mono); background: var(--bg); color: var(--text); }
+.icon-color-pop { position: fixed; z-index: 105; background: var(--panel); border-radius: 10px; box-shadow: var(--shadow); padding: 8px; }

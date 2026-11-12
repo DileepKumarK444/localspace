@@ -21,7 +21,7 @@ Stop: press `Ctrl+C` in the terminal, or `lsof -ti :4000 | xargs kill`.
 
 Folders and nested pages · TipTap editor (tables, task lists, callouts, expandable sections, code highlighting, images) · autosave with conflict protection · drag-and-drop and Move · Trash · attachments · backup/restore ·
 **Export** (page → Markdown/HTML/PDF-via-print; workspace → ZIP) · **Markdown import** · **version history** with restore · **custom templates** with `{{date}}` variables ·
-**recent activity** · search with `"phrases"`, `-exclusions`, filters, folder scope · **light/dark theme** · **keyboard shortcuts** (`⌘/` or `?` shows them).
+**recent activity** · search with `"phrases"`, `-exclusions`, filters, folder scope · **colours** (36+ text/highlight/cell colours, custom picker, per-folder and per-page icon colours) · **light/dark theme** · **keyboard shortcuts** (`⌘/` or `?` shows them).
 
 ## Test
 

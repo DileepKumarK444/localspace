@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
-import { confirmDialog, editor, node, openPage, status } from './helpers';
+import { confirmDialog, editor, node, openPage, status, goToEnd } from './helpers';
 import { assertIntegrity } from './helpers2';
 import { PNG, TestServer, doc } from './server';
 
@@ -43,7 +43,7 @@ test.describe.serial('safety: persistence, crashes, errors, conflicts, versions,
     await openPage(page, server, 'Offline edit');
     await server.stop();
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' typed-while-offline');
     await expect(status(page)).toHaveAttribute('data-state', 'error', { timeout: 15_000 });
     await expect(status(page)).toContainText(/retrying/i);
@@ -65,7 +65,7 @@ test.describe.serial('safety: persistence, crashes, errors, conflicts, versions,
     await openPage(page, server, 'Draft recovery');
     await server.stop();
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' unsaved-draft');
     await expect(status(page)).toHaveAttribute('data-state', 'error', { timeout: 15_000 });
     const dialogPromise = page.waitForEvent('dialog');
@@ -88,11 +88,11 @@ test.describe.serial('safety: persistence, crashes, errors, conflicts, versions,
     const other = await context.newPage();
     await openPage(other, server, 'Conflict page');
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' from-tab-A');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     await editor(other).click();
-    await other.keyboard.press('Control+End');
+    await goToEnd(other);
     await other.keyboard.type(' from-tab-B');
     await expect(status(other)).toHaveAttribute('data-state', 'conflict');
     await expect(other.getByRole('alert')).toContainText('changed elsewhere');
@@ -105,11 +105,11 @@ test.describe.serial('safety: persistence, crashes, errors, conflicts, versions,
     // second scenario: choose to overwrite deliberately
     await page.reload();
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' A2');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     await editor(other).click();
-    await other.keyboard.press('Control+End');
+    await goToEnd(other);
     await other.keyboard.type(' B2');
     await expect(status(other)).toHaveAttribute('data-state', 'conflict');
     await other.getByRole('button', { name: 'Overwrite with my version' }).click();
@@ -129,7 +129,7 @@ test.describe.serial('safety: persistence, crashes, errors, conflicts, versions,
     await expect(page.locator('.v-item', { hasText: 'Before changes' })).toBeVisible();
     await page.getByRole('button', { name: 'Close history' }).click();
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' changed');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     expect(await text(id)).toBe('first changed');

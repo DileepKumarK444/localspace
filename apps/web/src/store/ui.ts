@@ -10,6 +10,7 @@ export interface ConfirmState {
 export interface MenuState { x: number; y: number; kind: NodeKind; id: string }
 export type DialogState = { kind: 'move'; itemKind: 'folder' | 'page'; id: string } | { kind: 'template'; parent: { kind: 'folder' | 'page'; id: string } | null } | null;
 export interface DndState { drag: { kind: NodeKind; id: string } | null; over: { id: string; pos: 'before' | 'inside' | 'after' } | null }
+export interface ColorPickerState { x: number; y: number; kind: NodeKind; id: string }
 export interface PromptState { title: string; label: string; initial?: string; confirmLabel: string; placeholder?: string; onSubmit: (value: string) => void | Promise<void> }
 export interface Toast { id: number; message: string; tone: 'info' | 'error' }
 
@@ -21,6 +22,8 @@ interface UiState {
   toasts: Toast[];
   dialog: DialogState;
   prompt: PromptState | null;
+  colorPicker: ColorPickerState | null;
+  setColorPicker: (c: ColorPickerState | null) => void;
   shortcutsOpen: boolean;
   sidebarOpen: boolean;
   historyFor: string | null;
@@ -49,6 +52,8 @@ export const useUi = create<UiState>((set, get) => ({
   toasts: [],
   dialog: null,
   prompt: null,
+  colorPicker: null,
+  setColorPicker: (colorPicker) => set({ colorPicker }),
   shortcutsOpen: false,
   sidebarOpen: typeof window === 'undefined' || window.innerWidth > 900,
   historyFor: null,

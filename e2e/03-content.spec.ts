@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
-import { confirmDialog, editor, openFolder, openPage, status } from './helpers';
+import { confirmDialog, editor, openFolder, openPage, status, goToEnd } from './helpers';
 import { PNG, TestServer, doc } from './server';
 
 const server = new TestServer();
@@ -116,7 +116,7 @@ test.describe.serial('content: attachments, search accuracy, export & import', (
     // edit through the UI → searchable after autosave
     await openPage(page, server, 'Banana bread');
     await editor(page).click();
-    await page.keyboard.press('Control+End');
+    await goToEnd(page);
     await page.keyboard.type(' zucchini');
     await expect(status(page)).toHaveAttribute('data-state', 'saved');
     expect(await search('zucchini')).toEqual(['Banana bread']);
@@ -174,8 +174,9 @@ test.describe.serial('content: attachments, search accuracy, export & import', (
     // PDF export opens the print view in a new tab
     await page.getByRole('button', { name: 'Page actions' }).click();
     const [popup] = await Promise.all([page.context().waitForEvent('page'), page.getByRole('menuitem', { name: /PDF/ }).click()]);
-    await popup.waitForLoadState();
-    expect(await popup.content()).toContain('Save as PDF');
+    await popup.waitForURL(/format=pdf/); // the tab opens blank first, then navigates to the print view
+    await popup.waitForLoadState('domcontentloaded');
+    await expect(popup.locator('body')).toContainText('Save as PDF');
     await popup.close();
 
     await page.goto(`${server.url}/settings`);

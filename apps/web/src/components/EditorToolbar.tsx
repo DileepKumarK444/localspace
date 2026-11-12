@@ -4,7 +4,9 @@ import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Braces, ChevronDown, ChevronRight, Code, Highlighter, ImageIcon, Info, Italic, Link2, List,
   ListChecks, ListOrdered, Minus, Palette, Plus, Quote, Redo2, Strikethrough, Table, Underline, Undo2,
 } from 'lucide-react';
+import { TEXT_COLORS, TINT_COLORS } from '../lib/colors';
 import { CALLOUT_TYPES, type CalloutType } from '../lib/extensions';
+import ColorPanel from './ColorPanel';
 
 function Btn({ label, on, onClick, disabled, children, cls = '' }: { label: string; on?: boolean; onClick: () => void; disabled?: boolean; children: ReactNode; cls?: string }) {
   return (
@@ -38,25 +40,8 @@ function Pop({ label, icon, on, children, wide }: { label: string; icon: ReactNo
   );
 }
 
-const TEXT_COLORS = [['Default', null], ['Gray', '#6b778c'], ['Red', '#c9372c'], ['Orange', '#b65c02'], ['Green', '#1f845a'], ['Blue', '#0c66e4'], ['Purple', '#6554c0']] as const;
-const HIGHLIGHTS = [['Yellow', '#fff0b3'], ['Green', '#baf3db'], ['Blue', '#cce0ff'], ['Red', '#ffd5d2'], ['Purple', '#dfd8fd'], ['Gray', '#e6e9ee']] as const;
 const SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '32px'];
 const LANGS: [string, string][] = [['', 'Auto / plain'], ['javascript', 'JavaScript'], ['typescript', 'TypeScript'], ['python', 'Python'], ['bash', 'Bash'], ['sql', 'SQL'], ['json', 'JSON'], ['xml', 'HTML / XML'], ['css', 'CSS'], ['java', 'Java'], ['go', 'Go'], ['rust', 'Rust'], ['yaml', 'YAML'], ['markdown', 'Markdown'], ['c', 'C'], ['cpp', 'C++'], ['csharp', 'C#'], ['php', 'PHP'], ['ruby', 'Ruby'], ['diff', 'Diff']];
-
-function Swatches({ items, onPick, onClear, clearLabel }: { items: readonly (readonly [string, string | null])[]; onPick: (c: string | null) => void; onClear?: () => void; clearLabel?: string }) {
-  return (
-    <div>
-      <div className="swatches">
-        {items.map(([name, c]) => (
-          <button key={name} type="button" className="swatch" title={name} aria-label={name} style={{ background: c ?? '#fff' }} onClick={() => onPick(c)}>
-            {c === null && <span style={{ color: '#172b4d', fontWeight: 700 }}>A</span>}
-          </button>
-        ))}
-      </div>
-      {onClear && <button type="button" className="pop-item" onClick={onClear}>{clearLabel ?? 'Remove'}</button>}
-    </div>
-  );
-}
 
 export default function EditorToolbar({ editor, onLink, onImage }: { editor: Editor; onLink: () => void; onImage: () => void }) {
   const c = () => editor.chain().focus();
@@ -94,10 +79,10 @@ export default function EditorToolbar({ editor, onLink, onImage }: { editor: Edi
       </div>
       <div className="tb-grp">
         <Pop label="Text colour" on={!!textStyle.color} icon={<span className="color-icon"><Palette className="ic" /><i style={{ background: textStyle.color ?? 'transparent' }} /></span>}>
-          {(close) => <Swatches items={TEXT_COLORS} onPick={(col) => { (col ? c().setColor(col) : c().unsetColor()).run(); close(); }} />}
+          {(close) => <ColorPanel colors={TEXT_COLORS} current={textStyle.color} resetLabel="Default colour" onPick={(col) => { (col ? c().setColor(col) : c().unsetColor()).run(); close(); }} />}
         </Pop>
         <Pop label="Highlight" on={editor.isActive('highlight')} icon={<Highlighter className="ic" />}>
-          {(close) => <Swatches items={HIGHLIGHTS} onPick={(col) => { c().setHighlight({ color: col as string }).run(); close(); }} onClear={() => { c().unsetHighlight().run(); close(); }} clearLabel="Remove highlight" />}
+          {(close) => <ColorPanel colors={TINT_COLORS.slice(4)} current={editor.getAttributes('highlight').color} resetLabel="Remove highlight" onPick={(col) => { (col ? c().setHighlight({ color: col }) : c().unsetHighlight()).run(); close(); }} />}
         </Pop>
         <Pop label="Alignment" icon={editor.isActive({ textAlign: 'center' }) ? <AlignCenter className="ic" /> : editor.isActive({ textAlign: 'right' }) ? <AlignRight className="ic" /> : editor.isActive({ textAlign: 'justify' }) ? <AlignJustify className="ic" /> : <AlignLeft className="ic" />}>
           {(close) => (
@@ -176,7 +161,7 @@ export default function EditorToolbar({ editor, onLink, onImage }: { editor: Edi
           <Btn label="Toggle header row" cls="txt" onClick={() => c().toggleHeaderRow().run()}>Header row</Btn>
           <Btn label="Toggle header column" cls="txt" onClick={() => c().toggleHeaderColumn().run()}>Header col</Btn>
           <Pop label="Cell colour" icon={<span className="ins">Cell colour</span>}>
-            {(close) => <Swatches items={HIGHLIGHTS} onPick={(col) => { c().setCellAttribute('backgroundColor', col).run(); close(); }} onClear={() => { c().setCellAttribute('backgroundColor', null).run(); close(); }} clearLabel="No colour" />}
+            {(close) => <ColorPanel colors={TINT_COLORS} current={editor.getAttributes('tableCell').backgroundColor ?? editor.getAttributes('tableHeader').backgroundColor} resetLabel="No colour" onPick={(col) => { c().setCellAttribute('backgroundColor', col).run(); close(); }} />}
           </Pop>
           <Btn label="Delete table" cls="txt danger" onClick={() => c().deleteTable().run()}>Delete table</Btn>
         </div>

@@ -1,19 +1,19 @@
 import { prisma } from '../../db';
 
-export interface FolderMeta { id: string; name: string; parentId: string | null; position: number }
-export interface PageMeta { id: string; title: string; folderId: string | null; parentPageId: string | null; position: number; updatedAt: Date }
+export interface FolderMeta { id: string; name: string; parentId: string | null; position: number; color: string | null }
+export interface PageMeta { id: string; title: string; folderId: string | null; parentPageId: string | null; position: number; updatedAt: Date; color: string | null }
 
 /** Loads lightweight metadata for all non-deleted folders/pages (small for a personal workspace). */
 export async function loadMeta(workspaceId: string) {
   const [folders, pages] = await Promise.all([
     prisma.folder.findMany({
       where: { workspaceId, deletedAt: null },
-      select: { id: true, name: true, parentId: true, position: true },
+      select: { id: true, name: true, parentId: true, position: true, color: true },
       orderBy: [{ position: 'asc' }, { name: 'asc' }],
     }),
     prisma.page.findMany({
       where: { workspaceId, deletedAt: null },
-      select: { id: true, title: true, folderId: true, parentPageId: true, position: true, updatedAt: true },
+      select: { id: true, title: true, folderId: true, parentPageId: true, position: true, updatedAt: true, color: true },
       orderBy: [{ position: 'asc' }, { title: 'asc' }],
     }),
   ]);
