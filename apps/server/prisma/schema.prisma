@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String     @id @default(cuid())
+  name      String
+  icon      String     @default("L")
+  createdAt DateTime   @default(now())
+  folders   Folder[]
+  pages     Page[]
+  favorites Favorite[]
+  templates Template[]
+  activity  Activity[]
+}
+
+model Folder {
+  id          String    @id @default(cuid())
+  workspaceId String
+  parentId    String?
+  name        String
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent      Folder?   @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[]  @relation("FolderTree")
+  pages       Page[]
+
+  @@index([workspaceId, parentId])
+}
+
+model Page {
+  id           String        @id @default(cuid())
+  workspaceId  String
+  folderId     String?
+  parentPageId String?
+  title        String
+  contentJson  String        @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
+  contentText  String        @default("")
+  version      Int           @default(1)
+  position     Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  folder       Folder?       @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  parentPage   Page?         @relation("PageTree", fields: [parentPageId], references: [id], onDelete: Cascade)
+  children     Page[]        @relation("PageTree")
+  attachments  Attachment[]
+  versions     PageVersion[]
+  favorite     Favorite?
+  recent       RecentView?
+
+  @@index([workspaceId, folderId])
+  @@index([parentPageId])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  pageId      String
+  filename    String
+  mime        String
+  size        Int
+  storagePath String
+  sha256      String
+  createdAt   DateTime @default(now())
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+}
+
+model PageVersion {
+  id          String   @id @default(cuid())
+  pageId      String
+  title       String
+  contentJson String
+  label       String?
+  createdAt   DateTime @default(now())
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, createdAt])
+}
+
+model Favorite {
+  pageId      String    @id
+  workspaceId String
+  createdAt   DateTime  @default(now())
+  page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model RecentView {
+  pageId   String   @id
+  viewedAt DateTime @default(now())
+  page     Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+}
+
+model Template {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  description String    @default("")
+  contentJson String
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+/// Append-only feed of what happened. entityId is deliberately not a foreign key so history survives purges.
+model Activity {
+  id          String    @id @default(cuid())
+  workspaceId String
+  type        String
+  kind        String
+  entityId    String
+  title       String
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([entityId])
+}
