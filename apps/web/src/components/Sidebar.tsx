@@ -133,10 +133,36 @@ function MiniList({ ids, empty }: { ids: string[]; empty: string }) {
   );
 }
 
+type SectionKey = 'favorites' | 'recent' | 'pages';
+const SECTIONS_KEY = 'localspace.sidebarSections';
+const readSections = (): Record<SectionKey, boolean> => {
+  try { return { favorites: true, recent: true, pages: true, ...JSON.parse(localStorage.getItem(SECTIONS_KEY) ?? '{}') }; } catch { return { favorites: true, recent: true, pages: true }; }
+};
+
+/** A sidebar section title that folds its content away; the open/closed state is remembered. */
+function SectionHeader({ label, open, count, onToggle, children }: { label: string; open: boolean; count?: number; onToggle: () => void; children?: React.ReactNode }) {
+  return (
+    <div className="sec">
+      <button type="button" className="sec-toggle" aria-expanded={open} onClick={onToggle} title={open ? `Collapse ${label}` : `Expand ${label}`}>
+        <ChevronRight className="ic" style={{ width: 12, height: 12, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .12s' }} />
+        <span>{label}</span>
+        {!open && count !== undefined && count > 0 && <span className="sec-count">{count}</span>}
+      </button>
+      {children}
+    </div>
+  );
+}
+
 export default function Sidebar() {
   const { folders, pages, favorites, recents, loaded } = useTree();
   const { newPage, newFolder, selection } = useActions();
   const [filter, setFilter] = useState('');
+  const [sections, setSections] = useState(readSections);
+  const toggleSection = (k: SectionKey) => setSections((cur) => {
+    const next = { ...cur, [k]: !cur[k] };
+    try { localStorage.setItem(SECTIONS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    return next;
+  });
   const [backupAt, setBackupAt] = useState<string | null>(null);
   const items = buildTree(folders, pages);
   const shown = filterTree(items, filter);
@@ -163,12 +189,15 @@ export default function Sidebar() {
         <button className="btn primary" title="New page" aria-label="New page" onClick={() => newPage(selection)} style={{ padding: '0 9px' }}><Plus className="ic" /></button>
       </div>
       <div className="sb-scroll">
-        <div className="sec">Favorites</div>
-        <MiniList ids={favorites} empty="Star a page to pin it" />
-        <div className="sec">Recently viewed</div>
-        <MiniList ids={recents} empty="Nothing yet" />
-        <div className="sec">Pages <button title="New folder" aria-label="New folder" onClick={() => newFolder(null)}><FolderPlus className="ic" /></button></div>
+        <SectionHeader label="Favorites" open={sections.favorites} count={favorites.length} onToggle={() => toggleSection('favorites')} />
+        {sections.favorites && <MiniList ids={favorites} empty="Star a page to pin it" />}
+        <SectionHeader label="Recently viewed" open={sections.recent} count={recents.length} onToggle={() => toggleSection('recent')} />
+        {sections.recent && <MiniList ids={recents} empty="Nothing yet" />}
+        <SectionHeader label="Pages" open={sections.pages || !!filter.trim()} count={pages.length} onToggle={() => toggleSection('pages')}>
+          <button type="button" className="sec-act" title="New folder" aria-label="New folder" onClick={() => newFolder(null)}><FolderPlus className="ic" /></button>
+        </SectionHeader>
         <div
+          hidden={!sections.pages && !filter.trim()}
           role="tree" style={{ minHeight: 40 }}
           onDragOver={(e) => { if (useUi.getState().dnd.drag) { e.preventDefault(); } }}
           onDrop={(e) => {

@@ -124,6 +124,55 @@ test.describe('keyboard', () => {
   });
 });
 
+test.describe('sidebar sections', () => {
+  test('Favorites, Recently viewed and Pages fold open and closed, remember their state, and never hide a filter match', async ({ page }) => {
+    const arch = (await server.api('GET', '/tree')).pages.find((p: any) => p.title === 'Architecture');
+    await page.goto(`${server.url}/page/${arch.id}`);
+    const fav = page.locator('.sb-scroll');
+    const toggle = (name: string) => page.locator('.sec-toggle', { hasText: new RegExp(`^${name}`) });
+    await expect(toggle('Favorites')).toHaveAttribute('aria-expanded', 'true');
+    await expect(fav.locator('.node', { hasText: 'Introduction' }).first()).toBeVisible(); // a sample favorite
+
+    // Favorites: collapse hides the list and shows a count badge
+    await toggle('Favorites').click();
+    await expect(toggle('Favorites')).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle('Favorites').locator('.sec-count')).toHaveText(String((await server.api('GET', '/tree')).favorites.length));
+    await expect(page.locator('.sb-scroll .node', { hasText: 'Star a page' })).toHaveCount(0);
+    // Recently viewed
+    await toggle('Recently viewed').click();
+    await expect(toggle('Recently viewed')).toHaveAttribute('aria-expanded', 'false');
+    // Pages: the whole tree disappears (but the open page stays open in the editor)
+    await toggle('Pages').click();
+    await expect(page.locator('[role=tree]')).toBeHidden();
+    await expect(page.locator('.title')).toHaveValue('Architecture');
+    // typing in the filter reveals matches even while Pages is collapsed
+    await page.getByLabel('Filter pages').fill('Data Model');
+    await expect(page.locator('[role=tree]')).toBeVisible();
+    await expect(node(page, 'Data Model')).toBeVisible();
+    await page.getByLabel('Filter pages').fill('');
+    await expect(page.locator('[role=tree]')).toBeHidden();
+
+    // state survives a reload
+    await page.reload();
+    await expect(toggle('Favorites')).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle('Recently viewed')).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle('Pages')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('[role=tree]')).toBeHidden();
+
+    // reopen all
+    for (const n of ['Favorites', 'Recently viewed', 'Pages']) await toggle(n).click();
+    await expect(page.locator('[role=tree]')).toBeVisible();
+    await expect(node(page, 'Architecture')).toBeVisible();
+    // the "new folder" button still works from the Pages header and keyboard toggling works
+    await toggle('Pages').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[role=tree]')).toBeHidden();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[role=tree]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'New folder' })).toBeVisible();
+  });
+});
+
 test.describe('phone-sized screens', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
